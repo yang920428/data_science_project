@@ -1,0 +1,145 @@
+# import numpy as np
+# import matplotlib.pyplot as plt
+# from keras.models import Model
+# from keras.layers import Input, LSTM, Dense
+
+# # Translate whole raw data into an array
+# name = str(input("input your station: "))
+# data_common_path = "D://code_sets//ds_bigproject//data_set//train_data//"
+# with open(data_common_path + name + ".txt", "r") as f:
+#     lines = f.readlines()
+
+# data_arr = []
+
+# for line in lines:
+#     dataline = [float(x) for x in line.strip().split()]
+#     data_arr.append(dataline)
+
+# data_arr = data_arr[::-1]
+
+# data_arr = np.array(data_arr)
+# feature_sets = data_arr[:, :7]  # Use 7 features for both training and testing
+# rainfall_sets = data_arr[:, 6]
+
+# data_size = len(data_arr)
+
+# # Define the input layers for training and testing data
+# train_input = Input(shape=(1, 7))  # Use 7 features for training
+# test_input = Input(shape=(1, 6))  # Use 6 features for testing
+
+# # LSTM layer for training data
+# lstm_train = LSTM(units=50)(train_input)
+
+# # LSTM layer for testing data
+# lstm_test = LSTM(units=50)(test_input)
+
+# # Output layer
+# output = Dense(units=1)
+
+# # Connect output layer to LSTM layers
+# train_output = output(lstm_train)
+# test_output = output(lstm_test)
+
+# # Create models
+# model_train = Model(inputs=train_input, outputs=train_output)
+# model_test = Model(inputs=test_input, outputs=test_output)
+
+# # Compile models
+# model_train.compile(optimizer='adam', loss='mse')
+# model_test.compile(optimizer='adam', loss='mse')
+
+# # Generate synthetic training data
+# X_train = feature_sets[:int(data_size/2), :]
+# Y_train = rainfall_sets[:int(data_size/2)]
+# X_train = X_train.reshape(X_train.shape[0], 1, X_train.shape[1])
+
+# # Generate synthetic test data
+# X_test = feature_sets[int(data_size/2):data_size, :6]  # Use 6 features for testing
+# Y_test = rainfall_sets[int(data_size/2):data_size]
+# X_test = X_test.reshape(X_test.shape[0], 1, X_test.shape[1])
+
+# # Train the model
+# model_train.fit(X_train, Y_train, epochs=100, batch_size=32)
+
+# # Use the model to make predictions on test data
+# predicted_rainfall = model_test.predict(X_test)
+
+# # Calculate errors
+# #errors = np.abs(predicted_rainfall - Y_test)
+# error = 0
+# acrate = 0
+# ac_sunny = 0
+# ac_rain = 0
+# num_rain = 0
+# num_sunny = 0
+# errors = []
+# for i in range(len(Y_test)):
+#     errors.append(abs((Y_test[i] - predicted_rainfall[i])))
+#     #errors.append(abs(Y_test[i] - predicted_rainfall[i]))
+#     error = error + abs((Y_test[i] - predicted_rainfall[i])*(Y_test[i] - predicted_rainfall[i]))
+#     if (Y_test[i] >= 0.5):
+#         num_rain += 1
+#     else:
+#         num_sunny += 1
+#     if ( (Y_test[i] >= 0.5 and predicted_rainfall[i] >= 0.5) or (Y_test[i] < 0.5 and predicted_rainfall[i] < 0.5)):
+#         acrate = acrate + 1
+#     if (Y_test[i] >= 0.5 and predicted_rainfall[i] >= 0.5):
+#         ac_rain += 1
+#     if (Y_test[i] < 0.5 and predicted_rainfall[i] < 0.5):
+#         ac_sunny += 1
+# errors = np.array(errors)
+
+# #Test : print the error
+# error = np.sqrt(error[0]/len(Y_test))
+# print("the RMSE is : "+str(error))
+# acrate = acrate / len(Y_test)
+# acrainrate = ac_rain / num_rain
+# acsunnyrate = ac_sunny / num_sunny
+# print("the AC Rate is : " + str(acrate))
+# print("the ac rain is : "+ str(acrainrate))
+# print("the ac sunny rate is : "+ str(acsunnyrate))
+
+# print("predict max rainfall : " + str(max(predicted_rainfall)[0]))
+
+# # for i in range(len(errors)):
+# #     print(errors[i])
+
+# # Plot the actual vs predicted rainfall
+# plt.figure(figsize=(10, 5))
+
+# plt.subplot(2, 2, 1)
+# plt.plot(Y_test, label='Actual Rainfall')
+# #plt.plot(predicted_rainfall, label='Predicted Rainfall')
+# plt.plot(0.5*np.ones(len(Y_test)), label='rain line', color='red')
+# plt.xlabel('Time')
+# plt.ylabel('Rainfall')
+# plt.title('Actual Rainfall')
+# plt.legend()
+
+# # Plot the absolute errors
+# plt.subplot(2, 2, 2)
+# plt.plot(predicted_rainfall, label='Predicted Rainfall', color='orange')
+# plt.plot(0.5*np.ones(len(Y_test)), label='rain line', color='red')
+# plt.xlabel('Time')
+# plt.ylabel('Rainfall')
+# plt.title('Predicted Rainfall')
+# plt.legend()
+
+# plt.subplot(2, 2, 3)
+# plt.plot(Y_test, label='Actual Rainfall')
+# plt.plot(predicted_rainfall, label='Predicted Rainfall')
+# plt.plot(0.5*np.ones(len(Y_test)), label='rain line', color='red')
+# plt.xlabel('Time')
+# plt.ylabel('Rainfall')
+# plt.title('Actual vs Predicted Rainfall')
+# plt.legend()
+
+# plt.subplot(2, 2, 4)
+# plt.plot(error*np.ones(len(Y_test)), label='error', color='red')
+# plt.xlabel('Time')
+# plt.ylabel('error')
+# plt.title('Error')
+# plt.legend()
+
+# plt.suptitle(name)
+# plt.show()

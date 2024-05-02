@@ -1,0 +1,14 @@
+4/8
+1.Data的維度需要解釋清楚，input跟Output
+2.有沒有辦法使用一個類神經網路同時預測雨量跟降雨與否
+
+4/15
+寫信問“--”的資料缺失問題?
+確認資料維度與data input
+預測雨量(FLOAT), 降雨與否(0/1), 可用同一個NN架構嗎? 
+
+4/22 Feedback:
+Input 6 dimension, output 1 dimension (降雨量)
+Metric?  (比降雨量的預測誤差)
+approach (LSTM), benchmark (other approaches?)
+建議去參加專題競賽
