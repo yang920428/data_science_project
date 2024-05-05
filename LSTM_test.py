@@ -5,6 +5,9 @@ from keras.layers import LSTM, Dense
 import keras.backend as K
 import math as ma
 
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
 # def root_mean_squared_error(y_true, y_pred):
 #     return K.sqrt(K.mean(K.square(y_pred - y_true)))
 
@@ -26,7 +29,7 @@ if (mode == 1):
 
 #translate whole raw data be a array
     name = str(input("input your station :"))
-    backforward = int(input("back day : "))
+    #backforward = int(input("back day : "))
     data_common_path = "D://code_sets//ds_bigproject//data_set//train_data//"
     with open(data_common_path+name+".txt" , "r") as f:
         lines = f.readlines()
@@ -57,7 +60,7 @@ if (mode == 1):
     model = Sequential()
 
     # Add the LSTM layer, units represent the number of LSTM units, input_shape represents the input data shape (timesteps, features)
-    model.add(LSTM(units=50, input_shape=(1, 6)))
+    model.add(LSTM(units=150, input_shape=(1, 6)))
 
     # Add the output layer, which outputs a single value representing the predicted rainfall
     model.add(Dense(units=1))
@@ -67,28 +70,28 @@ if (mode == 1):
     model.compile(optimizer='adam', loss='mse')
 
     # Train the model
-    count_class_0 = (Y_train < 0.5).sum()
-    count_class_1 = (Y_train >= 0.5).sum()
+    count_class_0 = (Y_train < max(Y_train)/2).sum()
+    count_class_1 = (Y_train >= max(Y_train)/2).sum()
     
     # calculate weight
-    weight_class_0 = 1
-    weight_class_1 = 1 + 2 *count_class_0 / (count_class_0 + count_class_1)
+    weight_class_0 = 1 + 0.1 * sigmoid( -np.log(count_class_0 / (count_class_1)) )
+    weight_class_1 = 1 + 0.1 * sigmoid( np.log(count_class_0 / (count_class_1)) )
     
     
-    # weight_class_0 = 1 / (count_class_0 )
-    # weight_class_1 = 1 / (count_class_1)
+    # weight_class_0 = count_class_1 / (count_class_0 )
+    # weight_class_1 = count_class_0 / (count_class_1)
 
     # setting weight
     class_weight = {0: weight_class_0, 1: weight_class_1}
     
     # model.fit(X_train, Y_train, epochs=10, batch_size=32)
-    model.fit(X_train, Y_train, epochs=10*10, batch_size=32 , class_weight = class_weight)
+    model.fit(X_train, Y_train, epochs=10*10, batch_size= 64 , class_weight = class_weight)
 
     # Generate synthetic test data
-    # X_test = feature_sets[int(data_size/2):data_size,:]
-    # Y_test = rainfall_sets[int(data_size/2):data_size]
-    X_test = feature_sets[data_size-backforward*24-1:data_size,:]
-    Y_test = rainfall_sets[data_size-backforward*24-1:data_size]
+    X_test = feature_sets[int(data_size/2):data_size,:]
+    Y_test = rainfall_sets[int(data_size/2):data_size]
+    # X_test = feature_sets[data_size-backforward*24-1:data_size,:]
+    # Y_test = rainfall_sets[data_size-backforward*24-1:data_size]
     #int(data_size/2):data_size
 
     # Reshape the test data, adding a time step dimension
@@ -138,8 +141,10 @@ if (mode == 1):
     print("the AC Rate is : " + str(acrate))
     print("the ac rain is : "+ str(acrainrate))
     print("the ac sunny rate is : "+ str(acsunnyrate))
-
-    print("predict max rainfall : " + str(max(predicted_rainfall)[0]))
+    # print("the precision : " + str(ac_rain / (ac_rain + (num_sunny - ac_sunny))))
+    # print("recall : " + str(ac_rain / (ac_rain + (num_rain - ac_rain))))
+    
+    #print("predict max rainfall : " + str(max(predicted_rainfall)[0]))
 
     # for i in range(len(errors)):
     #     print(errors[i])
@@ -195,8 +200,9 @@ if (mode == 1):
 elif (mode == 2):
 ### ALL STATION CODE
 ### START
-    backforward = int(input("back day : "))
+    #backforward = int(input("back day : "))
     for name in AllStation:
+        name = name.split(" ")[0]
         # name = str(input("input your station :"))
         data_common_path = "D://code_sets//ds_bigproject//data_set//train_data//"
         with open(data_common_path+name+".txt" , "r") as f:
@@ -228,7 +234,7 @@ elif (mode == 2):
         model = Sequential()
 
         # Add the LSTM layer, units represent the number of LSTM units, input_shape represents the input data shape (timesteps, features)
-        model.add(LSTM(units=50, input_shape=(1, 6)))
+        model.add(LSTM(units=150, input_shape=(1, 6)))
 
         # Add the output layer, which outputs a single value representing the predicted rainfall
         model.add(Dense(units=1))
@@ -238,24 +244,24 @@ elif (mode == 2):
         model.compile(optimizer='adam', loss='mse')
 
         # Train the model
-        count_class_0 = (Y_train < 0.5).sum()
-        count_class_1 = (Y_train >= 0.5).sum()
+        count_class_0 = (Y_train < max(Y_train)/2).sum()
+        count_class_1 = (Y_train >= max(Y_train)/2).sum()
         
         # calculate weight
-        weight_class_0 = count_class_1 / (count_class_0 + count_class_1)
-        weight_class_1 = count_class_0 / (count_class_0 + count_class_1)
+        weight_class_0 = 1 + 0.1 * sigmoid( -np.log(count_class_0 / (count_class_1)) )
+        weight_class_1 = 1 + 0.1 * sigmoid( np.log(count_class_0 / (count_class_1)) )
 
         # setting weight
         class_weight = {0: weight_class_0, 1: weight_class_1}
         
         # model.fit(X_train, Y_train, epochs=10, batch_size=32)
-        model.fit(X_train, Y_train, epochs=10*10, batch_size=32 , class_weight = class_weight)
+        model.fit(X_train, Y_train, epochs=10*10, batch_size= 64 , class_weight = class_weight)
 
         # Generate synthetic test data
-        # X_test = feature_sets[int(data_size/2):data_size,:]
-        # Y_test = rainfall_sets[int(data_size/2):data_size]
-        X_test = feature_sets[data_size-backforward*24-1:data_size,:]
-        Y_test = rainfall_sets[data_size-backforward*24-1:data_size]   
+        X_test = feature_sets[int(data_size/2):data_size,:]
+        Y_test = rainfall_sets[int(data_size/2):data_size]
+        # X_test = feature_sets[data_size-backforward*24-1:data_size,:]
+        # Y_test = rainfall_sets[data_size-backforward*24-1:data_size]   
         #int(data_size/2):data_size
 
         # Reshape the test data, adding a time step dimension
@@ -297,6 +303,7 @@ elif (mode == 2):
         errors = np.array(errors)
 
         #Test : print the error
+        print("the Station : " + name)
         error = np.sqrt(error[0]/len(Y_test))
         print("the RMSE is : "+str(error))
         acrate = acrate / len(Y_test)
